@@ -1,0 +1,37 @@
+Client Protocol 
+This page describes the messaging between the wifidog client and auth server once a user has been validated and permitted access to the internet. It is client level messaging and not node level as described in the Server Heartbeat.
+Periodically the wifidog client will start a thread to report the status of each user connection. Currently this is used to reporting incoming/outgoing counters for each user, and to show that the user is still connected.
+The following message is sent for each connected user
+auth_server:/auth/index.php?stage=countersip=mac=token=incoming=outgoing=
+In response the auth server will respond with a valid status, and a new user message, or an auth server error.
+The format of the response should be:
+Auth: <number from user status list>
+The new user status can be:
+0 - AUTH_DENIED - User firewall users are deleted and the user removed.6 - AUTH_VALIDATION_FAILED - User email validation timeout has occured and user/firewall is deleted1 - AUTH_ALLOWED - User was valid, add firewall rules if not present5 - AUTH_VALIDATION - Permit user access to email to get validation email under default rules-1 - AUTH_ERROR - An error occurred during the validation process
+auth server errors do not currently change firewall or user status.
+Custom versions of the auth server set auth_DENIED when they wish to timeout a user, or close a node etc, to force the user to be terminated.
+Browser redirects by the gateway
+The client browser is going to be redirected to another page in different circumstances:
+On the initial request:
+Upon capture, the client will be redirected to the following URL by the gateway:
+
+   * login?gw_address=%s&gw_port=%d&gw_id=%s&url=%s
+
+After the initial request
+Once the login request is processed and client has been redirected to the gateway
+If server returned AUTH_DENIED: Note that you will normally never see that one in the standard auth server. The client won't be redirected back to the gateway.
+
+   * gw_message.php?message=denied
+
+If server returned AUTH_VALIDATION:
+
+   * gw_message.php?message=activate
+
+If server returned AUTH_ALLOWED: This is the portal redirect
+
+   * portal/?gw_id=%s
+
+If server returned AUTH_VALIDATION_FAILED: Note that you will normally never see that one in the standard auth server. The client won't be redirected back to the gateway.
+
+   * gw_message.php?message=failed_validation
+
